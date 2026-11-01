@@ -37,5 +37,36 @@ export default defineConfig(
       ...nextPlugin.configs['core-web-vitals'].rules,
     },
   },
+  {
+    // The domain is deterministic: time is an input, never read from the clock.
+    files: ['apps/api/src/domain/**/*.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'Date',
+          message:
+            'The domain must stay deterministic: pass time in, do not read the clock.',
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "NewExpression[callee.name='Date']",
+          message: 'The domain must stay deterministic: do not create a Date.',
+        },
+        {
+          selector: "MemberExpression[object.name='Date']",
+          message: 'The domain must stay deterministic: do not call Date.',
+        },
+        {
+          selector:
+            "MemberExpression[object.name='globalThis'][property.name='Date']",
+          message:
+            'The domain must stay deterministic: do not reach Date through globalThis.',
+        },
+      ],
+    },
+  },
   prettier,
 );
