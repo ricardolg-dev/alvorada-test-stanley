@@ -103,9 +103,9 @@ The four ADRs are in `docs/adr/`. I highlight the first and the last.
 
 Two decisions from the work:
 
-**What counts as the same content on a resend?** The statement says a repeated `op_id` with the same content returns the receipt, but not how to compare. I compare `note_id`, `base_revision` and text exactly. A false mismatch gives a visible `id_reutilizado`, while normalizing could return an old receipt for a different text and lose an edit silently. See [ADR 0003](docs/adr/0003-receipts.md).
+**What counts as the same content on a resend?** The statement says a repeated `op_id` with the same content returns the receipt, but not how to compare. I wanted to know whether exact comparison was the best choice, so I compared it with normalizing the text and with a hash. The first proposal for the hash said it would save memory. I observed that a receipt must return its result, and the result already holds the text, so it would save little. I kept the exact comparison: a false mismatch gives a visible `id_reutilizado`, while normalizing could return an old receipt and lose an edit silently. See [ADR 0003](docs/adr/0003-receipts.md).
 
-**One operation per edit, or one per note?** Two edits made offline would carry the same base revision, so the first would be accepted and the second would conflict with it, with nobody else involved. O2 and O3 in [the API examples](docs/api.md#commands-and-expected-answers) show the server's side of that. So a device keeps one pending operation per note and replaces its text on a new edit. See [ADR 0004](docs/adr/0004-device-outbox.md).
+**Can a saved draft overwrite newer work?** The tests passed, but I wanted to see the flows in a real browser, so I asked for a visual and flow validation. It showed that a draft saved after a pull replaced the newer text with no conflict, which is what the statement asks to prevent. I decided to fix it: a draft now keeps the revision it started from, and the same steps give `conflito`. See [docs/validation.md](docs/validation.md).
 
 ## How AI helped
 
@@ -129,7 +129,7 @@ I used Claude Code with my own aimi-engineering plugin (<https://github.com/aimi
 | `frozen \|\| busy` in two places     | Treat it as duplication to fix                | Kept: I observed that the page shows the rule and the device enforces it                                       |
 | Repository layer                     | Do not add one                                | Kept: I reviewed it and decided it would only forward calls                                                    |
 
-**How it was verified.** The result is checked by commands, not by the tool's own report. A story is committed only after its command passes, and the repository carries the checks to run again: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test` (including the fast-check model of the sync rules and a fast-check run of two devices against the real rules, which checks that no edit disappears silently) and `pnpm test:e2e` (two devices against the running API). Both sides of the HTTP contract are tested against one example file.
+**How it was verified.** I did not take the tool's report as the result. I used the page in the browser myself, and I had the plugin's reviewers go through architecture, bugs, simplicity and documents. When they reported findings, I asked for each one to be proven before accepting a fix, by reproducing it in a browser or with a test that failed first. I also had each rule of the statement checked against the running API, including its example. I read the reports and decided what to fix, what to keep and what to leave out, as the table above shows. The repository carries the checks to run again: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test` and `pnpm test:e2e`, and CI runs them on a clean machine. The browser checks are in [docs/validation.md](docs/validation.md).
 
 ## Data and language
 
