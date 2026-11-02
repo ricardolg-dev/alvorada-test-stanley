@@ -12,6 +12,8 @@ My declared focus is full stack. The server is a NestJS API, and the client is a
 
 The demonstration uses a fictional insurer's claim notes. The decisions behind the shape of the work are in the [four ADRs](#decisions).
 
+Time spent: about 5 to 5.5 hours, including planning, review and directing the coding agents.
+
 ## Install, run and test
 
 Requirements: Node.js 24 (see `.nvmrc`) and pnpm 12.15.0, the version pinned in `packageManager`.
