@@ -139,6 +139,21 @@ describe('claimOf', () => {
       claimOf(state(device(), device({ seen: { 'CLM-3': 1 } }))),
     ).toBeUndefined();
   });
+
+  it('keeps the scenario on the first note when a second one is still unsent', () => {
+    const phone = device({
+      seen: { [CLAIM]: 1 },
+      outbox: { 'CLM-2': { base: 0 } },
+      online: false,
+    });
+    expect(claimOf(state(phone, device()))).toBe(CLAIM);
+    const resolving = device({
+      seen: { [CLAIM]: 2 },
+      conflictAt: CLAIM,
+      outbox: { 'CLM-2': { base: 0 } },
+    });
+    expect(claimOf(state(resolving, device()))).toBe(CLAIM);
+  });
 });
 
 describe('conflict steps judge the settled state', () => {
@@ -190,6 +205,35 @@ describe('conflict steps judge the settled state', () => {
       device(),
     );
     expect(conflict[3]?.hint?.(offline)).toBeNull();
+  });
+
+  it('step 2 stays on the first note when the phone holds an unsent second note', () => {
+    const phone = device({
+      seen: { [CLAIM]: 1 },
+      outbox: { 'CLM-2': { base: 0 } },
+      online: false,
+    });
+    const s = state(phone, device({ seen: { [CLAIM]: 1 } }), [note(1)]);
+    expect(conflict[1]?.done(s)).toBe(true);
+    expect(conflict[1]?.check(s)).toEqual({ ok: true, got: 'office sees r1' });
+    expect(conflict[1]?.done(state(phone, device(), [note(1)]))).toBe(false);
+  });
+
+  it('step 4 waits for an edit of the first note, not for an unsent second note', () => {
+    const phone = device({
+      seen: { [CLAIM]: 1 },
+      outbox: { 'CLM-2': { base: 0 } },
+      online: false,
+    });
+    const s = state(phone, device({ seen: { [CLAIM]: 1 } }), [note(1)]);
+    expect(conflict[3]?.done(s)).toBe(false);
+    expect(conflict[3]?.target(s)).toBe(`edit:adjuster:${CLAIM}`);
+    const edited = device({
+      seen: { [CLAIM]: 1 },
+      outbox: { [CLAIM]: { base: 1 }, 'CLM-2': { base: 0 } },
+      online: false,
+    });
+    expect(conflict[3]?.done(state(edited, device(), [note(1)]))).toBe(true);
   });
 
   it('step 5 needs the server at r2 while the phone still last saw r1', () => {

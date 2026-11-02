@@ -99,13 +99,17 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   );
 }
 
-/** The note id is generated, so every step reads it from the phone. */
+/**
+ * The note id is generated, so every step reads it from the phone. A note the
+ * server already holds comes first, so a second, unsent note never takes over
+ * the scenario.
+ */
 export function claimOf(state: GuideState): string | undefined {
   const phone = state.devices.adjuster;
   return [
-    ...phone.outbox.keys(),
     ...phone.seen.keys(),
     ...phone.conflicts.keys(),
+    ...phone.outbox.keys(),
   ][0];
 }
 
