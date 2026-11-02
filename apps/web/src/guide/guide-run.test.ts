@@ -116,6 +116,19 @@ describe('blockedReason', () => {
     );
   });
 
+  it('names the note to select when a step with a note has no control on screen', () => {
+    const withNote = SCENARIOS.conflict.steps[3];
+    if (withNote === undefined) throw new Error('missing step');
+    const s = state(device({ seen: { [CLAIM]: 1 }, online: false }), device(), [
+      note(1),
+    ]);
+    expect(blockedReason(withNote, s, 'missing')).toBe(
+      `Select ${CLAIM} to continue.`,
+    );
+    expect(blockedReason(withNote, s, 'ready')).toBeNull();
+    expect(blockedReason(withNote, s, 'disabled')).toBe(FALLBACK_REASON);
+  });
+
   it('is null when nothing blocks the step', () => {
     expect(blockedReason(step, empty, 'ready')).toBeNull();
   });

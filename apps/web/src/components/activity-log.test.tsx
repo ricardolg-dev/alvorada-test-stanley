@@ -128,7 +128,7 @@ describe('activity log', () => {
     expect(html).toContain('Response, lost on the way back');
   });
 
-  it('shows the error message in place of a response, with the same mark', () => {
+  it('shows the error message in place of a response, marked as a failed request', () => {
     const html = render([
       send(1, {
         event: {
@@ -141,7 +141,8 @@ describe('activity log', () => {
       }),
     ]);
     expect(html).toContain('The request timed out.');
-    expect(html).toContain('>response lost<');
+    expect(html).toContain('>request failed<');
+    expect(html).not.toContain('response lost');
     expect(html).not.toContain('>Response<');
     expect(html).not.toContain('null');
   });

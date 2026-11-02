@@ -88,7 +88,10 @@ export type CreateResult =
   { ok: true; noteId: string } | { ok: false; reason: RefusalReason };
 
 export type Resolution =
-  { mode: 'discard' } | { mode: 'mine' } | { mode: 'text'; text: string };
+  | { mode: 'discard' }
+  | { mode: 'server' }
+  | { mode: 'mine' }
+  | { mode: 'text'; text: string };
 
 export interface Device {
   getState: () => DeviceState;
@@ -615,8 +618,12 @@ export function createDevice(options: DeviceOptions): Device {
       const conflict = conflicts.get(noteId);
       if (conflict === undefined) return { ok: false, reason: 'no_conflict' };
       conflicts.delete(noteId);
-      if (resolution.mode === 'discard') {
-        setLocal(`Discarded the proposal for ${noteId}.`);
+      if (resolution.mode === 'discard' || resolution.mode === 'server') {
+        setLocal(
+          resolution.mode === 'server'
+            ? `Kept the server text of ${noteId}; nothing to send.`
+            : `Discarded the proposal for ${noteId}.`,
+        );
         commit();
         return OK;
       }

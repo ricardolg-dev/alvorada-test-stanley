@@ -219,7 +219,7 @@ test.describe('two devices, one server', () => {
     await expect(log(page).locator('.log-row')).toHaveCount(0);
   });
 
-  test('keeping the server text discards the proposal and sends nothing', async ({
+  test('keeping the server text sends nothing and says so', async ({
     page,
     request,
   }) => {
@@ -254,6 +254,9 @@ test.describe('two devices, one server', () => {
     // The proposal is gone and nothing was sent: the server note and the
     // number of stored receipts are exactly what they were.
     await expect(phone(page).locator('.compare')).toHaveCount(0);
+    await expect(phone(page)).toContainText(
+      `Kept the server text of ${noteId}; nothing to send.`,
+    );
     await expect(fid(page, `edit:adjuster:${noteId}`)).toBeVisible();
     expect(posts).toEqual([]);
     expect(await apiNote(request, noteId)).toEqual({
@@ -512,11 +515,12 @@ test.describe('two devices, one server', () => {
     await expect(fid(page, `edit:adjuster:${second}`)).not.toHaveClass(/spot/);
     await expect(page.locator('.spot')).toHaveCount(0);
     await expect(fid(page, 'do-step')).toBeDisabled();
-    await expect(guide(page)).toContainText('This step cannot run');
+    await expect(guide(page)).toContainText(`Select ${first} to continue.`);
 
     await fid(page, `select:adjuster:${first}`).click();
     await expect(fid(page, `edit:adjuster:${first}`)).toHaveClass(/spot/);
     await expect(fid(page, 'do-step')).toBeEnabled();
+    await expect(guide(page)).not.toContainText('to continue.');
   });
 
   test('a failed read leaves "Do this step" off with a reason, and the next read goes on', async ({

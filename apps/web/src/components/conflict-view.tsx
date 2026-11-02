@@ -90,7 +90,7 @@ export function ConflictView({
           data-fid={fid('server')}
           disabled={disabled}
           onClick={() => {
-            onResolve({ mode: 'discard' });
+            onResolve({ mode: 'server' });
           }}
         >
           Keep server text

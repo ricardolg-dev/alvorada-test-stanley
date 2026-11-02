@@ -417,6 +417,33 @@ describe('conflicts', () => {
     expect(device.getState().conflicts.size).toBe(0);
   });
 
+  it('keeps the server text, says so and sends nothing', async () => {
+    const { device, server, noteId, link } = await conflicted();
+    const posts = link.posts();
+    const before = device.getState();
+    await device.resolve(noteId, { mode: 'server' });
+    const after = device.getState();
+    expect(link.posts()).toBe(posts);
+    expect(after.message).toBe(
+      `Kept the server text of ${noteId}; nothing to send.`,
+    );
+    expect(after.conflicts.size).toBe(0);
+    expect(after.receipts).toEqual(before.receipts);
+    expect(after.seen.get(noteId)?.revision).toBe(2);
+    expect(server.notes.get(noteId)).toMatchObject({
+      revision: 2,
+      text: 'office text',
+    });
+  });
+
+  it('keeps its own message when the person discards their text', async () => {
+    const { device, noteId } = await conflicted();
+    await device.resolve(noteId, { mode: 'discard' });
+    expect(device.getState().message).toBe(
+      `Discarded the proposal for ${noteId}.`,
+    );
+  });
+
   it('uses the conflict base even when a pull moved seen', async () => {
     const { device, server, noteId } = await conflicted();
     const office = makeDevice(server, 'ofc2', 12);

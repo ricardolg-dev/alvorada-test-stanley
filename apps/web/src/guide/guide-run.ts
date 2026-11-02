@@ -104,8 +104,10 @@ export function advance(run: GuideRun, state: GuideState): GuideRun {
 }
 
 /**
- * Why the step cannot run, or null when it can. A hint wins; a control that is
- * missing or disabled without a hint gets the generic reason.
+ * Why the step cannot run, or null when it can. A hint wins. A control that is
+ * missing while the step has a note means another note is selected, so the
+ * reason names the note to select. Any other missing or disabled control gets
+ * the generic reason.
  */
 export function blockedReason(
   step: Step,
@@ -114,5 +116,11 @@ export function blockedReason(
 ): string | null {
   const hint = step.hint?.(state) ?? null;
   if (hint !== null && hint !== '') return hint;
+  if (control === 'missing') {
+    const noteId = step.note?.(state);
+    if (noteId !== undefined && noteId !== '') {
+      return `Select ${noteId} to continue.`;
+    }
+  }
   return control === 'ready' ? null : FALLBACK_REASON;
 }

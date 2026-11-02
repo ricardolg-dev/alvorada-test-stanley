@@ -245,7 +245,8 @@ describe('a screen choice the guide did not make', () => {
       false,
     );
     expect(doStep().disabled).toBe(true);
-    expect(text()).toContain('This step cannot run in the current state');
+    expect(text()).toContain(`Select ${first} to continue.`);
+    expect(text()).not.toContain('This step cannot run in the current state');
 
     await click(must(`select:adjuster:${first}`));
     await until(() => !doStep().disabled, 'the step to be ready again');
@@ -471,6 +472,30 @@ describe('blocked steps', () => {
     await click(must('net:office:online'));
     await until(() => !doStep().disabled, 'Do this step to be enabled');
     expect(text()).not.toContain('is offline, so this step is blocked');
+  });
+});
+
+describe('resolving a conflict from the page', () => {
+  it('says the server text was kept, and not that the proposal was discarded', async () => {
+    await mount();
+    await doStepsUntil('Step 7 of 8');
+    const keep = document.querySelector<HTMLElement>(
+      '[data-fid^="resolve:adjuster:"][data-fid$=":server"]',
+    );
+    if (keep === null) throw new Error('no Keep server text button');
+    const noteId = keep.getAttribute('data-fid')?.split(':')[2] ?? '';
+    const posts = server.calls('POST /operations');
+
+    await click(keep);
+
+    await until(
+      () =>
+        text().includes(`Kept the server text of ${noteId}; nothing to send.`),
+      'the message',
+    );
+    expect(text()).not.toContain('Discarded the proposal');
+    expect(server.calls('POST /operations')).toBe(posts);
+    expect(server.notes()[0]?.revision).toBe(2);
   });
 });
 

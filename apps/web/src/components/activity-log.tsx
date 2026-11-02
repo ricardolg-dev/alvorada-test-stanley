@@ -44,7 +44,11 @@ export function ActivityLog({ entries }: { entries: readonly LogEntry[] }) {
           {ordered.map(({ seq, source, event }) => {
             const meta = DEVICE_META[source];
             const failed = event.error !== null;
-            const lost = event.discarded || failed;
+            const mark = event.discarded
+              ? 'response lost'
+              : failed
+                ? 'request failed'
+                : null;
             const results =
               event.kind !== 'pull' && event.response !== null
                 ? event.response
@@ -64,9 +68,9 @@ export function ActivityLog({ entries }: { entries: readonly LogEntry[] }) {
                       ))}
                     </span>
                   ) : null}
-                  {lost ? (
-                    <StatusPill text="response lost" kind="lost" />
-                  ) : null}
+                  {mark === null ? null : (
+                    <StatusPill text={mark} kind="lost" />
+                  )}
                 </summary>
                 <div className="log-json">
                   {event.request === null ? null : (
