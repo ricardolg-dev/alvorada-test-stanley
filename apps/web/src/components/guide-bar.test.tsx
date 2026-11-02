@@ -467,6 +467,29 @@ describe('blocked steps', () => {
   });
 });
 
+describe('a note the server lost', () => {
+  it('says the server no longer holds the note once the next read shows it', async () => {
+    await mount();
+    await click(doStep());
+    await until(() => label().startsWith('Step 2 of 8'), 'step 2');
+    await until(() => !doStep().disabled, 'step 2 to be ready');
+
+    // Another client empties the server; the open page cannot know yet.
+    await server.fetch('/api/reset', { method: 'POST' });
+    await click(doStep());
+
+    await until(
+      () =>
+        text().includes(
+          'The server no longer holds this note. Restart the scenario.',
+        ),
+      'the reason',
+    );
+    expect(label().startsWith('Step 2 of 8')).toBe(true);
+    expect(doStep().disabled).toBe(true);
+  });
+});
+
 describe('choosing a scenario, Reset and Free play', () => {
   it('resets the server and both devices when a scenario is chosen', async () => {
     await mount();

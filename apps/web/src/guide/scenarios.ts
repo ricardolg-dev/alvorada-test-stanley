@@ -176,7 +176,13 @@ const conflictSteps: readonly Step[] = [
     title: 'Pull the notes on the office computer.',
     expected: 'The office also sees the note at r1.',
     target: () => 'pull:office',
-    hint: onlineHint('office'),
+    hint: (s) => {
+      const claim = claimOf(s);
+      if (claim !== undefined && serverRevision(s, claim) === 0) {
+        return 'The server no longer holds this note. Restart the scenario.';
+      }
+      return onlineHint('office')(s);
+    },
     done: (s) => {
       const claim = claimOf(s);
       return claim !== undefined && s.devices.office.seen.has(claim);

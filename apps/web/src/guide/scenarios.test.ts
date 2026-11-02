@@ -219,6 +219,15 @@ describe('conflict steps judge the settled state', () => {
     expect(conflict[1]?.done(state(phone, device(), [note(1)]))).toBe(false);
   });
 
+  it('step 2 says when the server no longer holds the note the phone created', () => {
+    const phone = device({ seen: { [CLAIM]: 1 } });
+    expect(conflict[1]?.hint?.(state(phone, device(), []))).toBe(
+      'The server no longer holds this note. Restart the scenario.',
+    );
+    expect(conflict[1]?.hint?.(state(phone, device(), [note(1)]))).toBeNull();
+    expect(conflict[1]?.hint?.(state(device(), device(), []))).toBeNull();
+  });
+
   it('step 4 waits for an edit of the first note, not for an unsent second note', () => {
     const phone = device({
       seen: { [CLAIM]: 1 },
