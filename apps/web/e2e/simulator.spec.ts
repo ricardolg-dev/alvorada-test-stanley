@@ -13,7 +13,8 @@ import {
 // The same variables and defaults as playwright.config.ts and the apps.
 const WEB_PORT = process.env.WEB_PORT ?? '3000';
 const WEB = `http://127.0.0.1:${WEB_PORT}`;
-const API = process.env.API_URL ?? 'http://127.0.0.1:3001';
+const API =
+  process.env.API_URL ?? `http://127.0.0.1:${process.env.API_PORT ?? '3001'}`;
 const API_PORT = new URL(API).port;
 
 const OPENED = 'Claim opened: rear bumper damage reported.';

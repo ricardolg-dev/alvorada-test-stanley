@@ -29,10 +29,10 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-- `pnpm dev` starts both apps. The page listens on `127.0.0.1:3000` and the API on `127.0.0.1:3001`. Both ports must be free. To use other ports, set `API_PORT`, `WEB_PORT` and `API_URL` (the address the page proxies to) in the environment:
+- `pnpm dev` starts both apps. The page listens on `127.0.0.1:3000` and the API on `127.0.0.1:3001`. Both ports must be free. To use other ports, set `API_PORT` and `WEB_PORT` in the environment:
 
   ```bash
-  API_PORT=3101 WEB_PORT=3100 API_URL=http://127.0.0.1:3101 pnpm dev
+  API_PORT=3101 WEB_PORT=3100 pnpm dev
   ```
 
 - Wait for `Nest application successfully started` before you open the page. If you open it too early, it shows `Could not read the server` and `Reset failed`. Reload once the API is up.

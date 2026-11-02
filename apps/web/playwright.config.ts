@@ -6,7 +6,8 @@ import { defineConfig, devices } from '@playwright/test';
 // on a URL only this API answers with 2xx. The child processes read the same
 // API_PORT, WEB_PORT and API_URL from the environment.
 const webPort = process.env.WEB_PORT ?? '3000';
-const apiUrl = process.env.API_URL ?? 'http://127.0.0.1:3001';
+const apiUrl =
+  process.env.API_URL ?? `http://127.0.0.1:${process.env.API_PORT ?? '3001'}`;
 const webUrl = `http://127.0.0.1:${webPort}`;
 
 export default defineConfig({

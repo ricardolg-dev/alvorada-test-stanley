@@ -4,7 +4,7 @@ The API behind the simulator. Start it with `pnpm dev`, as the [README](../READM
 
 ## HTTP contract
 
-The page reaches the API through a same-origin proxy: a request to `/api/<path>` on port 3000 goes to `<path>` on port 3001. The [commands at the end](#commands-and-expected-answers) call the API on port 3001 directly. [`docs/contract/results.json`](contract/results.json) holds one example of every result, of a note, of an operation, of the note list and of the receipt count. It is test data only: the tests of both apps read it, `pnpm typecheck` compares it with the web app's contract types, and neither app imports it at run time, so there is no shared package.
+The page reaches the API through a same-origin proxy: a request to `/api/<path>` on port 3000 goes to `<path>` on port 3001, the default ports. The [commands at the end](#commands-and-expected-answers) call the API on port 3001 directly. [`docs/contract/results.json`](contract/results.json) holds one example of every result, of a note, of an operation, of the note list and of the receipt count. It is test data only: the tests of both apps read it, `pnpm typecheck` compares it with the web app's contract types, and neither app imports it at run time, so there is no shared package.
 
 | Endpoint              | Answer                                                                             |
 | --------------------- | ---------------------------------------------------------------------------------- |
