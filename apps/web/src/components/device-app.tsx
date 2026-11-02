@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import type { Device, DeviceState } from '../device/device';
+import { ConflictView } from './conflict-view';
 import { DEVICE_META, type DeviceId } from './device-meta';
+import { ReceiptsList } from './receipts-list';
+import { StatusPill } from './result-summary';
 
 export interface DeviceAppProps {
   id: DeviceId;
-  device: Pick<Device, 'createNote' | 'editNote' | 'pull' | 'retry'>;
+  device: Pick<
+    Device,
+    'createNote' | 'editNote' | 'pull' | 'retry' | 'resend' | 'resolve'
+  >;
   state: DeviceState;
-}
-
-function Pill({ kind, children }: { kind: string; children: string }) {
-  return <span className={`pill s-${kind}`}>{children}</span>;
 }
 
 /**
@@ -55,15 +57,13 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
     const entry = state.outbox.get(noteId);
     return (
       <span className="chips">
-        {known ? <Pill kind="rev">{`r${known.revision}`}</Pill> : null}
-        {state.conflicts.has(noteId) ? (
-          <Pill kind="conflito">conflito</Pill>
-        ) : null}
+        {known ? <StatusPill text={`r${known.revision}`} kind="rev" /> : null}
+        {state.conflicts.has(noteId) ? <StatusPill text="conflito" /> : null}
         {entry ? (
           entry.frozen ? (
-            <Pill kind="waiting">waiting for receipt</Pill>
+            <StatusPill text="waiting for receipt" kind="waiting" />
           ) : (
-            <Pill kind="pending">pending</Pill>
+            <StatusPill text="pending" />
           )
         ) : null}
       </span>
@@ -73,7 +73,8 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
   function renderDetail(noteId: string) {
     const known = state.seen.get(noteId);
     const entry = state.outbox.get(noteId);
-    const conflicted = state.conflicts.has(noteId);
+    const conflictResult = state.conflicts.get(noteId);
+    const conflicted = conflictResult !== undefined;
     const frozen = entry?.frozen === true;
     const key = `edit:${id}:${noteId}`;
     const value = drafts[noteId] ?? entry?.op.text ?? known?.text ?? '';
@@ -100,11 +101,17 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
             <div className="note-text">{entry.op.text}</div>
           </div>
         ) : null}
-        {conflicted ? (
-          <p className="conflict-note" role="status">
-            The server holds a different version of this note. Resolving the
-            conflict is not available on this page yet.
-          </p>
+        {conflictResult !== undefined ? (
+          <ConflictView
+            key={conflictResult.op_id}
+            deviceId={id}
+            noteId={noteId}
+            conflict={conflictResult}
+            disabled={state.busy}
+            onResolve={(resolution) => {
+              void device.resolve(noteId, resolution);
+            }}
+          />
         ) : (
           <>
             <label className="field">
@@ -252,7 +259,17 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
             ) : null}
           </div>
           {noteIds.length > 0 && selected !== undefined ? (
-            <div className="pane">{renderDetail(selected)}</div>
+            <div className="pane">
+              {renderDetail(selected)}
+              <ReceiptsList
+                deviceId={id}
+                receipts={state.receipts}
+                disabled={!state.online || state.busy}
+                onResend={(seq) => {
+                  void device.resend(seq);
+                }}
+              />
+            </div>
           ) : null}
         </div>
         <div

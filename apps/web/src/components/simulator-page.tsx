@@ -2,8 +2,15 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { readServer, resetServer, transport } from '../api-client/client';
-import { createDevice, type Device, type RandomSource } from '../device/device';
+import {
+  createDevice,
+  type Device,
+  type DeviceEvent,
+  type RandomSource,
+} from '../device/device';
+import { ActivityLog, type LogEntry } from './activity-log';
 import { DeviceApp } from './device-app';
+import type { DeviceId } from './device-meta';
 import { PhoneFrame, WindowFrame } from './device-frames';
 import { DeviceToolbar } from './device-toolbar';
 import { Wire } from './wire';
@@ -15,20 +22,26 @@ const browserRandom: RandomSource = (byteLength) => {
   return bytes;
 };
 
-function makeDevice(prefix: string): Device {
-  return createDevice({ prefix, transport, random: browserRandom });
+function makeDevice(
+  prefix: string,
+  onEvent: (event: DeviceEvent) => void,
+): Device {
+  return createDevice({ prefix, transport, random: browserRandom, onEvent });
 }
 
 /**
  * Empties the server first, then puts both devices back to their first state.
- * When the server call fails nothing else changes.
+ * Then runs `afterReset`, which clears what the page keeps of its own, the
+ * log. When the server call fails nothing else changes.
  */
 export async function resetSimulation(
   resetTheServer: () => Promise<void>,
   devices: readonly Pick<Device, 'reset'>[],
+  afterReset?: () => void,
 ): Promise<void> {
   await resetTheServer();
   for (const device of devices) device.reset();
+  afterReset?.();
 }
 
 function describe(cause: unknown): string {
@@ -38,8 +51,23 @@ function describe(cause: unknown): string {
 }
 
 export function SimulatorPage() {
-  const [adjuster] = useState(() => makeDevice('adj'));
-  const [office] = useState(() => makeDevice('ofc'));
+  const [log, setLog] = useState<LogEntry[]>([]);
+  const lastSeq = useRef(0);
+  const record = (source: DeviceId, event: DeviceEvent) => {
+    lastSeq.current += 1;
+    const entry: LogEntry = { seq: lastSeq.current, source, event };
+    setLog((previous) => [entry, ...previous]);
+  };
+  const [adjuster] = useState(() =>
+    makeDevice('adj', (event) => {
+      record('adjuster', event);
+    }),
+  );
+  const [office] = useState(() =>
+    makeDevice('ofc', (event) => {
+      record('office', event);
+    }),
+  );
   const adjusterState = useSyncExternalStore(
     adjuster.subscribe,
     adjuster.getState,
@@ -87,7 +115,10 @@ export function SimulatorPage() {
 
   function reset() {
     setResetError(null);
-    resetSimulation(resetServer, [adjuster, office]).catch((cause: unknown) => {
+    resetSimulation(resetServer, [adjuster, office], () => {
+      lastSeq.current = 0;
+      setLog([]);
+    }).catch((cause: unknown) => {
       setResetError(`Reset failed: ${describe(cause)}`);
     });
   }
@@ -152,6 +183,7 @@ export function SimulatorPage() {
             </WindowFrame>
           </div>
         </div>
+        <ActivityLog entries={log} />
       </main>
     </>
   );
