@@ -1,7 +1,6 @@
+import { SimulatorPage } from '../components/simulator-page';
+import '../components/simulator.css';
+
 export default function Page() {
-  return (
-    <main>
-      <h1>Offline notes sync</h1>
-    </main>
-  );
+  return <SimulatorPage />;
 }
