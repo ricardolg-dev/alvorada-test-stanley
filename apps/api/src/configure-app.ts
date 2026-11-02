@@ -1,7 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
 /** The largest JSON body the API reads: well above any valid outbox. */
-export const BODY_LIMIT = '10mb';
+const BODY_LIMIT = '10mb';
 
 /**
  * Settings shared by the real server and the tests, so the tests run the real

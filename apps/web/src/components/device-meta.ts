@@ -9,8 +9,6 @@ export interface DeviceMeta {
   app: string;
 }
 
-export const DEVICE_IDS: readonly DeviceId[] = ['adjuster', 'office'];
-
 export const DEVICE_META: Record<DeviceId, DeviceMeta> = {
   adjuster: {
     name: 'Field adjuster',

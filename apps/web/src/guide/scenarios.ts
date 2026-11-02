@@ -413,5 +413,3 @@ export const SCENARIOS: Readonly<Record<ScenarioId, Scenario>> = {
     steps: lostSteps,
   },
 };
-
-export const SCENARIO_IDS: readonly ScenarioId[] = ['conflict', 'lost'];

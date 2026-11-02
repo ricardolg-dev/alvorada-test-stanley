@@ -5,8 +5,8 @@
 import type { Transport } from '../device/device';
 import type { Note, Operation, OperationResult } from './contract';
 
-export const API_PREFIX = '/api';
-export const REQUEST_TIMEOUT_MS = 8000;
+const API_PREFIX = '/api';
+const REQUEST_TIMEOUT_MS = 8000;
 
 export interface ApiClientOptions {
   fetch?: typeof fetch;
@@ -147,6 +147,5 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 const defaultClient = createApiClient();
 
 export const transport: Transport = defaultClient.transport;
-export const getReceiptCount = defaultClient.getReceiptCount;
 export const readServer = defaultClient.readServer;
 export const resetServer = defaultClient.resetServer;
