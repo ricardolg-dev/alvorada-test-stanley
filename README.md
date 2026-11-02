@@ -88,6 +88,8 @@ All three are in [`rules.test.ts`](apps/api/test/domain/rules.test.ts).
 
 The statement's own example runs in [`statement-example.test.ts`](apps/api/test/domain/statement-example.test.ts).
 
+The browser checks, with screenshots and what is still open, are in [docs/validation.md](docs/validation.md).
+
 ## Decisions
 
 The four ADRs are in `docs/adr/`. I highlight the first and the last.
