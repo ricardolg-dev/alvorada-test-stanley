@@ -344,13 +344,18 @@ describe('when the server cannot be read', () => {
     expect(text()).toContain('Step 3: ✓ as expected');
   });
 
-  it('tries the read once more and no more than once', async () => {
+  it('keeps reading while reads fail and goes on by itself once one works', async () => {
     await mount();
     await doStepsUntil('Step 3 of 8');
     await until(() => !doStep().disabled, 'step 3 to be ready');
     let attempts = 0;
+    let failing = true;
     vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
-      if ((init?.method ?? 'GET') !== 'GET' || !input.endsWith('/notes')) {
+      if (
+        !failing ||
+        (init?.method ?? 'GET') !== 'GET' ||
+        !input.endsWith('/notes')
+      ) {
         return server.fetch(input, init);
       }
       attempts += 1;
@@ -359,18 +364,20 @@ describe('when the server cannot be read', () => {
 
     await click(doStep());
     await until(() => text().includes(READ_FAILED_TEXT), 'the hold');
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-    });
-
-    // The read behind the change, and one more try.
-    expect(attempts).toBe(2);
+    // The read behind the change, and a try every second after it.
+    const deadline = Date.now() + 8000;
+    while (attempts < 4 && Date.now() < deadline) await tick();
+    expect(attempts).toBeGreaterThanOrEqual(4);
     expect(label().startsWith('Step 3 of 8')).toBe(true);
     expect(text()).toContain(READ_FAILED_TEXT);
     expect(doStep().disabled).toBe(true);
+
+    failing = false;
+    await until(() => label().startsWith('Step 4 of 8'), 'step 4');
+    expect(text()).not.toContain(READ_FAILED_TEXT);
   });
 
-  it('drops the second try when a newer read has already settled the step', async () => {
+  it('drops the pending retry when a newer read has already settled the step', async () => {
     await mount();
     await doStepsUntil('Step 3 of 8');
     await until(() => !doStep().disabled, 'step 3 to be ready');

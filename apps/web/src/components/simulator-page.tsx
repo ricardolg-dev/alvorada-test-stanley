@@ -31,7 +31,7 @@ import { ServerArea, type ServerView } from './server-area';
 // this long: a double click or two quick clicks run one step, not two.
 const STEP_LOCKOUT_MS = 400;
 
-// A read that failed is tried once more after this long.
+// A read that failed is tried again after this long, until one succeeds.
 const READ_RETRY_MS = 1000;
 
 const READ_FAILED =
@@ -117,9 +117,8 @@ export function SimulatorPage() {
     undefined,
   );
   const latestRead = useRef(0);
-  // Bumped to ask for one more read: after a failed one, or a failed reset.
+  // Bumped to ask for one more read: after every failed one, or a failed reset.
   const [readTick, setReadTick] = useState(0);
-  const handledTick = useRef(0);
   // The first read waits for the one reset a fresh page makes.
   const [ready, setReady] = useState(false);
   const didInitialReset = useRef(false);
@@ -169,9 +168,6 @@ export function SimulatorPage() {
   useEffect(() => {
     if (!ready) return;
     const id = ++latestRead.current;
-    // A read asked for by a tick is the second try: it is not tried again.
-    const isRetry = readTick !== handledTick.current;
-    handledTick.current = readTick;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
     readServer().then(
@@ -206,7 +202,7 @@ export function SimulatorPage() {
           status: 'ready',
           error: `Could not read the server: ${describe(cause)}`,
         }));
-        if (isRetry || cancelled) return;
+        if (cancelled) return;
         retryTimer = setTimeout(() => {
           setReadTick((value) => value + 1);
         }, READ_RETRY_MS);

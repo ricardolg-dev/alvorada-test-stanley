@@ -519,7 +519,7 @@ test.describe('two devices, one server', () => {
     await expect(fid(page, 'do-step')).toBeEnabled();
   });
 
-  test('a failed read leaves "Do this step" off with a reason, and one more read goes on', async ({
+  test('a failed read leaves "Do this step" off with a reason, and the next read goes on', async ({
     page,
   }) => {
     await openSimulator(page);
