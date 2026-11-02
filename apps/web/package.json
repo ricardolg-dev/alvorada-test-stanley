@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 127.0.0.1 -p 3000",
+    "dev": "next dev -H 127.0.0.1 -p ${WEB_PORT:-3000}",
     "build": "next build",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",

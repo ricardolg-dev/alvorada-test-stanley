@@ -10,8 +10,11 @@ import {
 // the /api proxy. Server state is read over HTTP, never taken from page text
 // alone.
 
-const WEB = 'http://127.0.0.1:3000';
-const API = 'http://127.0.0.1:3001';
+// The same variables and defaults as playwright.config.ts and the apps.
+const WEB_PORT = process.env.WEB_PORT ?? '3000';
+const WEB = `http://127.0.0.1:${WEB_PORT}`;
+const API = process.env.API_URL ?? 'http://127.0.0.1:3001';
+const API_PORT = new URL(API).port;
 
 const OPENED = 'Claim opened: rear bumper damage reported.';
 const FIELD_EDIT = 'Inspection: rear bumper and left tail light damaged.';
@@ -30,11 +33,11 @@ test.beforeAll(async () => {
   try {
     page = await (await fetch(`${WEB}/`)).text();
   } catch {
-    throw new Error(`Nothing answers on port 3000 (${WEB}).`);
+    throw new Error(`Nothing answers on port ${WEB_PORT} (${WEB}).`);
   }
   if (!page.includes('data-fid="reset"')) {
     throw new Error(
-      'The page on port 3000 is not this simulator: no data-fid="reset".',
+      `The page on port ${WEB_PORT} is not this simulator: no data-fid="reset".`,
     );
   }
   let count: unknown;
@@ -42,11 +45,11 @@ test.beforeAll(async () => {
     const response = await fetch(`${API}/receipts/count`);
     count = ((await response.json()) as { count?: unknown }).count;
   } catch {
-    throw new Error(`The API on port 3001 (${API}) does not answer.`);
+    throw new Error(`The API on port ${API_PORT} (${API}) does not answer.`);
   }
   if (typeof count !== 'number') {
     throw new Error(
-      'The process on port 3001 is not this API: /receipts/count has no numeric count.',
+      `The process on port ${API_PORT} is not this API: /receipts/count has no numeric count.`,
     );
   }
 });

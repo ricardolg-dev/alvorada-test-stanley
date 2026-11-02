@@ -29,7 +29,12 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-- `pnpm dev` starts both apps. The page listens on `127.0.0.1:3000` and the API on `127.0.0.1:3001`. Both ports must be free.
+- `pnpm dev` starts both apps. The page listens on `127.0.0.1:3000` and the API on `127.0.0.1:3001`. Both ports must be free. To use other ports, set `API_PORT`, `WEB_PORT` and `API_URL` (the address the page proxies to) in the environment:
+
+  ```bash
+  API_PORT=3101 WEB_PORT=3100 API_URL=http://127.0.0.1:3101 pnpm dev
+  ```
+
 - Wait for `Nest application successfully started` before you open the page. If you open it too early, it shows `Could not read the server` and `Reset failed`. Reload once the API is up.
 
 Checks:
@@ -43,7 +48,7 @@ pnpm --dir apps/web exec playwright install chromium    # once, before test:e2e
 pnpm test:e2e    # Playwright: starts both apps if they are not running
 ```
 
-`pnpm test:e2e` uses ports 3000 and 3001 as well. If `pnpm dev` is already running, it reuses those servers. On a Linux machine without the browser libraries, add `--with-deps` to the install, as the CI workflow does.
+`pnpm test:e2e` uses the same ports, and the same variables change them. If `pnpm dev` is already running, it reuses those servers. On a Linux machine without the browser libraries, add `--with-deps` to the install, as the CI workflow does.
 
 The workflow in `.github/workflows/ci.yml` runs the same checks on a clean machine for every push.
 
