@@ -356,6 +356,34 @@ describe('conflicts', () => {
     expect(device.getState().outbox.size).toBe(0);
   });
 
+  it('says one conflict needs a decision', async () => {
+    const { device } = await conflicted();
+    expect(device.getState().message).toBe(
+      'Sent 1 operation. 1 conflict needs a decision.',
+    );
+  });
+
+  it('says two conflicts need a decision', async () => {
+    const server = new FakeServer();
+    const first = await seedNote(server, 'v1');
+    const other = await makeDevice(server, 'seed2', 98).device.createNote('w1');
+    if (!other.ok) throw new Error('seed failed');
+    const second = other.noteId;
+    const rig = makeDevice(server, 'adj', 12);
+    await rig.device.pull();
+    await rig.device.setOnline(false);
+    await rig.device.editNote(first, 'adjuster one');
+    await rig.device.editNote(second, 'adjuster two');
+    const office = makeDevice(server, 'ofc', 13);
+    await office.device.pull();
+    await office.device.editNote(first, 'office one');
+    await office.device.editNote(second, 'office two');
+    await rig.device.setOnline(true);
+    expect(rig.device.getState().message).toBe(
+      'Sent 2 operations. 2 conflicts need a decision.',
+    );
+  });
+
   it('resolves with a new op_id and the server revision', async () => {
     const { device, server, noteId } = await conflicted();
     const old = conflictOf(device, noteId).op_id;
@@ -651,6 +679,56 @@ describe('busy and reset', () => {
     expect(state.seen.size).toBe(0);
     expect(state.outbox.size).toBe(0);
     expect(events).toHaveLength(0);
+  });
+
+  it('settles at once when no request is open', async () => {
+    const server = new FakeServer();
+    const { device } = makeDevice(server, 'adj', 26);
+    await expect(device.settled()).resolves.toBeUndefined();
+  });
+
+  it('settles only after the open request has ended', async () => {
+    const server = new FakeServer();
+    const { device, link } = makeDevice(server, 'adj', 26);
+    const release = link.hold();
+    const flight = device.createNote('opened');
+    let ended = false;
+    void device.settled().then(() => {
+      ended = true;
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ended).toBe(false);
+
+    release();
+    await flight;
+    await device.settled();
+    expect(ended).toBe(true);
+  });
+
+  it('settles after a failed request, and after one a reset made stale', async () => {
+    const server = new FakeServer();
+    const { device, link } = makeDevice(server, 'adj', 26);
+    link.failNext('down');
+    await device.createNote('first');
+    await expect(device.settled()).resolves.toBeUndefined();
+
+    const release = link.hold();
+    const flight = device.retry();
+    device.reset();
+    let ended = false;
+    void device.settled().then(() => {
+      ended = true;
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ended).toBe(false);
+
+    release();
+    await flight;
+    await device.settled();
+    expect(ended).toBe(true);
   });
 
   it('restores the start state: online with the lose switch off', async () => {

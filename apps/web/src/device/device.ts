@@ -101,6 +101,12 @@ export interface Device {
   retry: () => Promise<ActionResult>;
   resend: (seq: number) => Promise<ActionResult>;
   resolve: (noteId: string, resolution: Resolution) => Promise<ActionResult>;
+  /**
+   * Resolves once the request open now has ended, whatever its outcome, or at
+   * once when none is open. It ends within the transport's own timeout and
+   * never rejects. It also covers a request a reset has already made stale.
+   */
+  settled: () => Promise<void>;
   reset: () => void;
 }
 
@@ -232,6 +238,9 @@ export function createDevice(options: DeviceOptions): Device {
   const conflicts = new Map<string, ConflictResult>();
   let receipts: readonly Receipt[] = [];
 
+  // The latest request, from the moment it leaves until its answer is in.
+  let open: Promise<unknown> = Promise.resolve();
+
   const listeners = new Set<() => void>();
 
   function build(): DeviceState {
@@ -325,15 +334,18 @@ export function createDevice(options: DeviceOptions): Device {
     accept: (value: unknown) => value is T,
   ): Promise<Outcome<T>> {
     const startedIn = epoch;
-    let outcome: Outcome<T>;
-    try {
-      const value = await call();
-      outcome = accept(value)
-        ? { kind: 'ok', value }
-        : { kind: 'failed', error: 'The answer did not match the request.' };
-    } catch (cause) {
-      outcome = { kind: 'failed', error: describeError(cause) };
-    }
+    const attempt = (async (): Promise<Outcome<T>> => {
+      try {
+        const value = await call();
+        return accept(value)
+          ? { kind: 'ok', value }
+          : { kind: 'failed', error: 'The answer did not match the request.' };
+      } catch (cause) {
+        return { kind: 'failed', error: describeError(cause) };
+      }
+    })();
+    open = attempt;
+    const outcome = await attempt;
     if (epoch !== startedIn) return { kind: 'stale' };
     busy = false;
     return outcome;
@@ -400,7 +412,7 @@ export function createDevice(options: DeviceOptions): Device {
     message =
       `Sent ${plural(request.length, 'operation')}.` +
       (conflicting > 0
-        ? ` ${plural(conflicting, 'conflict')} need a decision.`
+        ? ` ${plural(conflicting, 'conflict')} ${conflicting === 1 ? 'needs' : 'need'} a decision.`
         : '');
     commit();
     emit({
@@ -622,6 +634,10 @@ export function createDevice(options: DeviceOptions): Device {
       setLocal(`Resolution ${op.op_id} is pending on base revision ${base}.`);
       await flush();
       return OK;
+    },
+
+    settled: async () => {
+      await open;
     },
 
     reset: () => {

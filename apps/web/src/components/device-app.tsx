@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import type { Device, DeviceState } from '../device/device';
 import { ConflictView } from './conflict-view';
 import { DEVICE_META, type DeviceId } from './device-meta';
 import { ReceiptsList } from './receipts-list';
 import { StatusPill } from './result-summary';
+
+/** What the guide asks this screen to show when a step becomes current. */
+export interface DeviceFocus {
+  /** Changes for every request, so an identical one still applies. */
+  nonce: number;
+  noteId?: string;
+  /** Suggested text for the new-note box, used only while it is empty. */
+  newText?: string;
+  /** Suggested text for the selected note's edit box, used only while empty. */
+  editText?: string;
+}
 
 export interface DeviceAppProps {
   id: DeviceId;
@@ -14,17 +25,35 @@ export interface DeviceAppProps {
     'createNote' | 'editNote' | 'pull' | 'retry' | 'resend' | 'resolve'
   >;
   state: DeviceState;
+  focus?: DeviceFocus;
 }
 
 /**
  * The app inside a phone or a window. It renders the device module's state and
  * forwards each click to it; the sync rules stay in the module.
  */
-export function DeviceApp({ id, device, state }: DeviceAppProps) {
+export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [newText, setNewText] = useState('');
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<ReadonlyMap<string, string>>(new Map());
+
+  useLayoutEffect(() => {
+    if (focus === undefined) return;
+    const { noteId, newText: suggestedNew, editText } = focus;
+    if (noteId !== undefined) setSelectedId(noteId);
+    if (suggestedNew !== undefined) {
+      setNewOpen(true);
+      setNewText((current) => (current === '' ? suggestedNew : current));
+    }
+    if (editText !== undefined && noteId !== undefined) {
+      setDrafts((current) =>
+        (current.get(noteId) ?? '') === ''
+          ? new Map(current).set(noteId, editText)
+          : current,
+      );
+    }
+  }, [focus]);
 
   const noteIds = [
     ...new Set([
@@ -77,7 +106,7 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
     const conflicted = conflictResult !== undefined;
     const frozen = entry?.frozen === true;
     const key = `edit:${id}:${noteId}`;
-    const value = drafts[noteId] ?? entry?.op.text ?? known?.text ?? '';
+    const value = drafts.get(noteId) ?? entry?.op.text ?? known?.text ?? '';
     return (
       <div className="stack">
         <div className="detail-head">
@@ -121,7 +150,7 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
                 value={value}
                 disabled={frozen || state.busy}
                 onChange={(event) => {
-                  setDrafts({ ...drafts, [noteId]: event.target.value });
+                  setDrafts(new Map(drafts).set(noteId, event.target.value));
                 }}
               />
             </label>
@@ -132,11 +161,9 @@ export function DeviceApp({ id, device, state }: DeviceAppProps) {
                 disabled={frozen || state.busy}
                 onClick={() => {
                   const text = value;
-                  setDrafts(
-                    Object.fromEntries(
-                      Object.entries(drafts).filter(([key]) => key !== noteId),
-                    ),
-                  );
+                  const next = new Map(drafts);
+                  next.delete(noteId);
+                  setDrafts(next);
                   void device.editNote(noteId, text);
                 }}
               >

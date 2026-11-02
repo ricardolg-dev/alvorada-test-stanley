@@ -273,14 +273,58 @@ describe('server area', () => {
 describe('resetSimulation', () => {
   it('empties the server before it resets either device', async () => {
     const order: string[] = [];
+    const settled = () => Promise.resolve();
     await resetSimulation(() => {
       order.push('server');
       return Promise.resolve();
     }, [
-      { reset: () => order.push('adjuster') },
-      { reset: () => order.push('office') },
+      { settled, reset: () => order.push('adjuster') },
+      { settled, reset: () => order.push('office') },
     ]);
     expect(order).toEqual(['server', 'adjuster', 'office']);
+  });
+
+  it('lets a request that is already open land before it empties the server', async () => {
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const stored: string[] = [];
+    const device = createDevice({
+      prefix: 'adj',
+      random,
+      transport: {
+        getNotes: () => Promise.resolve([]),
+        postOperations: async (operations: Operation[]) => {
+          await held;
+          for (const op of operations) stored.push(op.note_id);
+          return operations.map((op): OperationResult => ({
+            op_id: op.op_id,
+            status: 'created',
+            note: { note_id: op.note_id, revision: 1, text: op.text },
+          }));
+        },
+      },
+    });
+    const sending = device.createNote('still on its way');
+    const emptied: string[][] = [];
+
+    const resetting = resetSimulation(() => {
+      emptied.push([...stored]);
+      stored.length = 0;
+      return Promise.resolve();
+    }, [device]);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(emptied).toEqual([]);
+
+    release();
+    await sending;
+    await resetting;
+
+    // The note had landed when the server was emptied, so none is left over.
+    expect(emptied).toEqual([['CLM-A0A1A2A3']]);
+    expect(stored).toEqual([]);
   });
 
   it('changes nothing on the devices when the server call fails', async () => {
