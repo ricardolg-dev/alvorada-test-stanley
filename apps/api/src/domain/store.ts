@@ -8,3 +8,8 @@ export interface SyncStore {
   readonly notes: Map<string, Note>;
   readonly receipts: Map<string, Receipt>;
 }
+
+/** A store that can also be emptied in place, for demonstrations and tests. */
+export interface ResettableSyncStore extends SyncStore {
+  reset(): void;
+}
