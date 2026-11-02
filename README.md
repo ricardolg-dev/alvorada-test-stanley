@@ -111,6 +111,22 @@ I used Claude Code with my own aimi-engineering plugin (<https://github.com/aimi
 
 **How it helped.** The plugin plans the work as small stories, each with acceptance criteria and a command that must pass. Claude Code implements one story at a time, and each story is its own commit. `AGENTS.md` holds the repository's conventions for any coding agent, and `CLAUDE.md` only imports it, so the two cannot drift apart.
 
+**What I kept or changed.**
+
+| Topic                                | AI proposal                                   | My choice                                                                                                      |
+| ------------------------------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Web test importing the API domain    | Keep it and document the exception in the ADR | Changed: I decided to move it to `tests/`, so the apps do not import each other                                |
+| Browser validation                   | Automated tests and spot checks               | Changed: I asked for a visual and flow validation, which found a draft overwriting newer text with no conflict |
+| Script replaying the `curl` examples | Keep it and add it to CI                      | Changed: I removed it after seeing that the tests already covered those answers                                |
+| Hash to compare content              | Argued it would save memory                   | Changed: I observed that receipts already hold the text, so it would save little                               |
+| API documentation                    | Keep it all in the README                     | Changed: I moved it to `docs/api.md`, with no Swagger                                                          |
+| Decisions in the README              | Full text in the README                       | Changed: I kept the details in the ADRs and a short summary in the README                                      |
+| Code out of line with an ADR         | Adjust the ADR text                           | Changed: I decided to fix the code so the ADR's decision holds                                                 |
+| Hardcoded ports                      | Not in the plan                               | Changed: I reviewed the hardcoded values and moved the ports to environment variables                          |
+| Exact content comparison             | No normalization of the text                  | Kept: I chose the error that stays visible over one that could lose an edit                                    |
+| `frozen \|\| busy` in two places     | Treat it as duplication to fix                | Kept: I observed that the page shows the rule and the device enforces it                                       |
+| Repository layer                     | Do not add one                                | Kept: I reviewed it and decided it would only forward calls                                                    |
+
 **How it was verified.** The result is checked by commands, not by the tool's own report. A story is committed only after its command passes, and the repository carries the checks to run again: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test` (including the fast-check model of the sync rules and a fast-check run of two devices against the real rules, which checks that no edit disappears silently) and `pnpm test:e2e` (two devices against the running API). Both sides of the HTTP contract are tested against one example file.
 
 ## Data and language
