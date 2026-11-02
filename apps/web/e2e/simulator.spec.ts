@@ -220,6 +220,33 @@ test.describe('two devices, one server', () => {
     await expect(log(page).locator('.log-row')).toHaveCount(0);
   });
 
+  test('a draft started before a newer revision meets the conflict', async ({
+    page,
+    request,
+  }) => {
+    await openSimulator(page);
+    await fid(page, 'free').click();
+    await fid(page, 'new-text:adjuster').fill(OPENED);
+    await fid(page, 'create:adjuster').click();
+    await expect(server(page).locator('.rev')).toHaveText('r1');
+    const { note_id: noteId } = await onlyServerNote(request);
+    await fid(page, 'pull:office').click();
+    await expect(fid(page, `select:office:${noteId}`)).toContainText('r1');
+
+    await fid(page, `field-edit:adjuster:${noteId}`).fill(FIELD_EDIT);
+    await fid(page, `field-edit:office:${noteId}`).fill(OFFICE_EDIT);
+    await fid(page, `edit:office:${noteId}`).click();
+    await expect(server(page).locator('.rev')).toHaveText('r2');
+    await fid(page, 'pull:adjuster').click();
+    await expect(fid(page, `select:adjuster:${noteId}`)).toContainText('r2');
+
+    await fid(page, `edit:adjuster:${noteId}`).click();
+
+    await expect(phone(page).locator('.compare')).toContainText(FIELD_EDIT);
+    const note = await onlyServerNote(request);
+    expect(note).toMatchObject({ revision: 2, text: OFFICE_EDIT });
+  });
+
   test('keeping the server text sends nothing and says so', async ({
     page,
     request,

@@ -99,7 +99,15 @@ export interface Device {
   setOnline: (online: boolean) => Promise<ActionResult>;
   setLoseNextResponse: (value: boolean) => void;
   createNote: (text: string) => Promise<CreateResult>;
-  editNote: (noteId: string, text: string) => Promise<ActionResult>;
+  /**
+   * `baseRevision` is the revision the edit started from. Without it, the
+   * edit starts from the revision the device has seen now.
+   */
+  editNote: (
+    noteId: string,
+    text: string,
+    baseRevision?: number,
+  ) => Promise<ActionResult>;
   pull: () => Promise<ActionResult>;
   retry: () => Promise<ActionResult>;
   resend: (seq: number) => Promise<ActionResult>;
@@ -482,7 +490,7 @@ export function createDevice(options: DeviceOptions): Device {
       return { ok: true, noteId };
     },
 
-    editNote: async (noteId, text) => {
+    editNote: async (noteId, text, baseRevision) => {
       if (busy) return REFUSED_BUSY;
       if (conflicts.has(noteId)) return { ok: false, reason: 'conflict' };
       const entry = outbox.get(noteId);
@@ -499,7 +507,7 @@ export function createDevice(options: DeviceOptions): Device {
         const op = {
           op_id: newOpId(),
           note_id: noteId,
-          base_revision: known.revision,
+          base_revision: baseRevision ?? known.revision,
           text,
         };
         outbox.set(noteId, pending(op, false));

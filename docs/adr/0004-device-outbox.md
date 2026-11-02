@@ -16,7 +16,7 @@ Each device keeps its pending operations in an outbox, with at most one per note
 
 - Editing a note again before it is sent replaces the text of its pending operation. The `op_id` and the place in the queue stay the same.
 - Once an operation is sent, it is frozen. It is resent unchanged, with the same `op_id`, until a receipt arrives. A note with a frozen operation cannot be edited, while other notes can.
-- The base revision is the revision the device last saw for that note, or 0 when the device is creating it. A receipt for an operation the device sent updates what it saw and never lowers it. A resent receipt is only displayed.
+- The base revision is the revision the device had seen when the person started the edit, or 0 when the device is creating the note. A draft keeps that revision through a pull, so saving it after a newer revision arrives meets the conflict instead of replacing the newer text. A receipt for an operation the device sent updates what it saw and never lowers it. A resent receipt is only displayed.
 - A pull never rebases a pending operation. The base revision stays the one the person edited from, so an outdated edit still meets the conflict instead of overwriting the server.
 - Keeping the server text discards the proposal and sends nothing, because the person is accepting what the server already holds. A new operation would raise the revision with no change, and could conflict with another device's pending edit.
 - A reset waits for open requests to end before it empties the server, and it blocks the controls while it runs, so no request lands after it.
@@ -36,6 +36,7 @@ Each device keeps its pending operations in an outbox, with at most one per note
 - A pull never changes the base revision of a pending operation, and a stale receipt never lowers the revision seen: the same file.
 - Two devices, a conflict, a resolution and a resend, against the real API: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
 - A reset while a request is out waits for it and leaves no note on the server: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
+- A draft started before a newer revision arrived gives `conflito` when saved: [page tests](../../apps/web/src/components/guide-bar.test.tsx).
 - Keeping the server text sends no request and leaves the revision and the receipt count unchanged: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
 
 ## Consequences

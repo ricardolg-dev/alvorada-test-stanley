@@ -32,11 +32,17 @@ export interface DeviceAppProps {
  * The app inside a phone or a window. It renders the device module's state and
  * forwards each click to it; the sync rules stay in the module.
  */
+/** Unsaved text, and the revision the device had seen when it started. */
+interface Draft {
+  text: string;
+  base: number | undefined;
+}
+
 export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [newText, setNewText] = useState('');
-  const [drafts, setDrafts] = useState<ReadonlyMap<string, string>>(new Map());
+  const [drafts, setDrafts] = useState<ReadonlyMap<string, Draft>>(new Map());
 
   useLayoutEffect(() => {
     if (focus === undefined) return;
@@ -48,8 +54,11 @@ export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
     }
     if (editText !== undefined && noteId !== undefined) {
       setDrafts((current) =>
-        (current.get(noteId) ?? '') === ''
-          ? new Map(current).set(noteId, editText)
+        (current.get(noteId)?.text ?? '') === ''
+          ? new Map(current).set(noteId, {
+              text: editText,
+              base: state.seen.get(noteId)?.revision,
+            })
           : current,
       );
     }
@@ -106,7 +115,8 @@ export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
     const conflicted = conflictResult !== undefined;
     const frozen = entry?.frozen === true;
     const key = `edit:${id}:${noteId}`;
-    const value = drafts.get(noteId) ?? entry?.op.text ?? known?.text ?? '';
+    const draft = drafts.get(noteId);
+    const value = draft?.text ?? entry?.op.text ?? known?.text ?? '';
     return (
       <div className="stack">
         <div className="detail-head">
@@ -150,7 +160,12 @@ export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
                 value={value}
                 disabled={frozen || state.busy}
                 onChange={(event) => {
-                  setDrafts(new Map(drafts).set(noteId, event.target.value));
+                  setDrafts(
+                    new Map(drafts).set(noteId, {
+                      text: event.target.value,
+                      base: draft ? draft.base : known?.revision,
+                    }),
+                  );
                 }}
               />
             </label>
@@ -164,7 +179,7 @@ export function DeviceApp({ id, device, state, focus }: DeviceAppProps) {
                   const next = new Map(drafts);
                   next.delete(noteId);
                   setDrafts(next);
-                  void device.editNote(noteId, text);
+                  void device.editNote(noteId, text, draft?.base);
                 }}
               >
                 Save edit

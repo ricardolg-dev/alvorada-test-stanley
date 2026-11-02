@@ -279,6 +279,29 @@ describe('sending', () => {
 });
 
 describe('pull', () => {
+  it('sends the revision an edit started from, not a newer one seen later', async () => {
+    const server = new FakeServer();
+    const noteId = await seedNote(server, 'v1');
+    const { device } = makeDevice(server, 'adj', 5);
+    await device.pull();
+    const office = makeDevice(server, 'ofc', 6);
+    await office.device.pull();
+    await office.device.editNote(noteId, 'office edit');
+    await device.pull();
+    expect(device.getState().seen.get(noteId)?.revision).toBe(2);
+
+    await device.editNote(noteId, 'adjuster draft', 1);
+
+    expect(server.notes.get(noteId)).toMatchObject({
+      revision: 2,
+      text: 'office edit',
+    });
+    expect(device.getState().conflicts.get(noteId)?.proposal).toEqual({
+      base_revision: 1,
+      text: 'adjuster draft',
+    });
+  });
+
   it('never changes the base revision of a pending operation', async () => {
     const server = new FakeServer();
     const noteId = await seedNote(server, 'v1');

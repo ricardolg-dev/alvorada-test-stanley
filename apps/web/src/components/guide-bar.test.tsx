@@ -835,3 +835,39 @@ describe('notes whose ids match members of Object', () => {
     },
   );
 });
+
+describe('a draft started before a newer revision arrived', () => {
+  it('meets the conflict instead of overwriting the newer text', async () => {
+    await mount();
+    await click(must('free'));
+    const post = async (op_id: string, base_revision: number, text: string) => {
+      const noteId = server.notes()[0]?.note_id ?? 'CLM-DRAFT';
+      await server.fetch('/api/operations', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify([{ op_id, note_id: noteId, base_revision, text }]),
+      });
+      return noteId;
+    };
+    const noteId = await post('seed', 0, 'first text');
+    await click(must('pull:adjuster'));
+    await until(
+      () => fid(`select:adjuster:${noteId}`) !== null,
+      'the pulled note',
+    );
+    await click(must(`select:adjuster:${noteId}`));
+
+    await typeInto(must(`field-edit:adjuster:${noteId}`), 'phone draft');
+
+    await post('other-device', 1, 'office text');
+    await click(must('pull:adjuster'));
+    await until(() => text().includes('Last seen at r2'), 'the newer revision');
+    await click(must(`edit:adjuster:${noteId}`));
+    await until(() => text().includes('conflito'), 'the conflict');
+
+    expect(server.notes()).toEqual([
+      { note_id: noteId, revision: 2, text: 'office text' },
+    ]);
+    expect(text()).toContain('phone draft');
+  });
+});

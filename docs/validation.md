@@ -65,9 +65,12 @@ Run with the Playwright script, with the failure forced at the network or from a
 | Other note selected at step 4          | "Select CLM-... to continue."                                                        |
 | Second tab opened                      | The server is emptied, and the first tab keeps its old view until its next action    |
 
+## Found here and fixed
+
+- **A draft saved after a pull replaced the newer text.** With an unsaved draft on the phone, the office edited the note to r2 and the phone pulled. Saving the draft gave r3 with no `conflito`. A draft now keeps the revision it started from, so the same steps give `conflito` with both texts and the server stays at r2. The test is in [guide-bar.test.tsx](../apps/web/src/components/guide-bar.test.tsx).
+
 ## What was seen and left as it is
 
-- **A draft outlives a pull.** With an unsaved draft on the phone, the office edited the note to r2 and the phone pulled. Saving the draft then gave r3 with no `conflito`, replacing the office text. The rules allow it, because the base revision is the one last seen, and the pulled text is shown above the editor.
 - **Retry looks like a first send in the log.** A retried operation reads `POST /operations`, while a resent receipt is marked `resend`.
 - **The sticky guide bar can cover the device toolbar** after the page scrolls to the highlighted control, and scrolling to a control can clip the top of the phone's note list.
 - **The Next.js dev tools button** overlaps the corner of the log heading. It exists only in development.
