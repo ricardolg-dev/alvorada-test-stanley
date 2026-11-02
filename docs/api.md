@@ -25,6 +25,8 @@ The position in the list ties a result to its operation. An operation with a mis
 
 ## Commands and expected answers
 
+The page and the API share one server: opening the page, `pnpm test:e2e` and the first `curl` command all reset it, and an open page does not notice a change made elsewhere until its next device action.
+
 Each pair below is one command and its answer, indented here for reading (the API prints one line), then the HTTP status. They run in this order, starting with the reset. The operations O1 to O4 are the statement's example: O3 conflicts, O2 and O3 are resent, and O2 is reused with other content.
 
 Reset the server first, so every id and answer below is stable. It answers 204 with no body.

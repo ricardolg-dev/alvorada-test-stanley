@@ -15,7 +15,7 @@ The API also has to keep arrival order. Two operations on the same revision must
 The API has three layers, and dependencies point inward:
 
 - `domain` holds every sync rule as plain TypeScript functions over an explicit store. It imports nothing from NestJS, and a lint rule forbids `Date` there. A pure function, `decideOperation`, decides the result of one valid operation against the current note, and a thin function reads and writes the store around it.
-- `presentation` holds the controller. It checks that the body is a list (anything else is HTTP 400), sets status codes, calls the domain and returns one result per operation.
+- `presentation` holds the controller. It checks that the body is a list (anything else is HTTP 400, and a body above 10 MB is HTTP 413), sets status codes, calls the domain and returns one result per operation.
 - `infrastructure` holds the in-memory store: two `Map` objects, one for notes and one for receipts.
 
 Each operation is validated on its own with a Zod `safeParse` inside the domain, before its `op_id` is looked up. An invalid operation gets its own `invalid` result and is never stored. Nest's `ValidationPipe` is not used for the batch.

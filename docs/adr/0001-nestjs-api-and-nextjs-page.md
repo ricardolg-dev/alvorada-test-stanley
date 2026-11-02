@@ -38,5 +38,5 @@ There is no shared package. The web app keeps its own contract types, and `docs/
 ## Consequences
 
 - An evaluator needs two processes and two ports (3000 and 3001), started together by `pnpm dev`.
-- A change to an HTTP result touches three places: the domain, the web contract types and the example file. `pnpm test` and `pnpm typecheck` fail when one of them is left behind.
+- A change to an HTTP result touches the domain, the web contract types and the example file; `pnpm test` and `pnpm typecheck` fail when one of them is left behind. A new result also needs the guard in `device.ts`, the text in `result-summary.tsx` and the double in `test-support/fake-server.ts`.
 - The page and the API share nothing at compile time, so a type error across the boundary is only caught by the contract checks. Only the test in `tests/`, at the repository root, imports both apps, to run real devices against the real rules.

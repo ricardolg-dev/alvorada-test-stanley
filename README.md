@@ -36,6 +36,7 @@ pnpm dev
   ```
 
 - Wait for `Nest application successfully started` before you open the page. If you open it too early, it shows `Could not read the server` and `Reset failed`. Reload once the API is up.
+- The page and the API share one server: opening the page, `pnpm test:e2e` and the first `curl` command all reset it, and an open page does not notice a change made elsewhere until its next device action.
 
 Checks:
 
@@ -147,5 +148,5 @@ The statement leaves some points open. These are my readings, and each is covere
 7. **Tokens and codes.** The tokens from the statement stay as written: `conflito` and `id_reutilizado`. The other results are `created`, `updated` and `invalid`. Only a body that is not a list is rejected as a whole, with HTTP 400 (malformed JSON, an empty body and a non-JSON content type included). Any list, `[]` included, gets HTTP 200 with one result per element, up to a 10 MB body. `POST /reset` answers 204.
 8. **Repeated `op_id` in one batch.** The second occurrence is processed after the first, so it gets the first's receipt (same content) or `id_reutilizado` (different content).
 9. **Generated `note_id`.** The statement does not say who names a note. A device generates the id when it creates the note: a claim number such as `CLM-7F3A2C91`, which is `CLM-` plus eight uppercase hexadecimal characters, retried if the device already holds it. It never changes after creation. Each `op_id` is a device prefix plus 64 random bits.
-10. **One request in flight.** A device has at most one request in flight. While it waits, its actions are refused or disabled, and a response that arrives after a Reset is ignored. A rejected request, a timeout and a non-2xx answer count as a lost response: the operations stay frozen and Retry appears.
+10. **One request in flight.** A device has at most one request in flight. While it waits, its actions are refused or disabled. A Reset waits for an open request to end before it empties the server, and blocks the controls meanwhile, so nothing lands after it. A rejected request, a timeout and a non-2xx answer count as a lost response: the operations stay frozen and Retry appears.
 11. **A change with the same text is still a change.** A new `op_id` on the current revision raises the revision even when the text is equal, as the statement says. Only a resend of the same `op_id` applies nothing.

@@ -19,6 +19,7 @@ Each device keeps its pending operations in an outbox, with at most one per note
 - The base revision is the revision the device last saw for that note, or 0 when the device is creating it. A receipt for an operation the device sent updates what it saw and never lowers it. A resent receipt is only displayed.
 - A pull never rebases a pending operation. The base revision stays the one the person edited from, so an outdated edit still meets the conflict instead of overwriting the server.
 - Keeping the server text discards the proposal and sends nothing, because the person is accepting what the server already holds. A new operation would raise the revision with no change, and could conflict with another device's pending edit.
+- A reset waits for open requests to end before it empties the server, and it blocks the controls while it runs, so no request lands after it.
 - The outbox lives in memory. It is not saved in `localStorage`.
 - The outbox belongs to a device. There is no outbox on the server.
 
@@ -34,6 +35,7 @@ Each device keeps its pending operations in an outbox, with at most one per note
 - A sent operation is frozen, and Retry brings back the stored receipt: the same file, sections on sending and on lost responses.
 - A pull never changes the base revision of a pending operation, and a stale receipt never lowers the revision seen: the same file.
 - Two devices, a conflict, a resolution and a resend, against the real API: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
+- A reset while a request is out waits for it and leaves no note on the server: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
 - Keeping the server text sends no request and leaves the revision and the receipt count unchanged: [the Playwright flow](../../apps/web/e2e/simulator.spec.ts).
 
 ## Consequences
