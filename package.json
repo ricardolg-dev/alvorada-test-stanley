@@ -1,0 +1,24 @@
+{
+  "name": "alvorada-offline-notes-sync",
+  "private": true,
+  "packageManager": "pnpm@12.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck && tsc --noEmit",
+    "test": "pnpm -r test && vitest run",
+    "test:e2e": "pnpm --dir apps/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^16.4.3",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "fast-check": "^4.10.2",
+    "prettier": "^3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  }
+}

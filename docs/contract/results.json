@@ -1,0 +1,80 @@
+{
+  "operation": {
+    "op_id": "adj-3f9c1d7a5b2e4c60",
+    "note_id": "CLM-1042",
+    "base_revision": 0,
+    "text": "Claim opened: rear bumper damage reported."
+  },
+  "note": {
+    "note_id": "CLM-1042",
+    "revision": 2,
+    "text": "Rear bumper damage confirmed by the field adjuster."
+  },
+  "notes": [
+    {
+      "note_id": "CLM-1042",
+      "revision": 2,
+      "text": "Rear bumper damage confirmed by the field adjuster."
+    }
+  ],
+  "receipt_count": {
+    "count": 3
+  },
+  "created": {
+    "op_id": "adj-3f9c1d7a5b2e4c60",
+    "status": "created",
+    "note": {
+      "note_id": "CLM-1042",
+      "revision": 1,
+      "text": "Claim opened: rear bumper damage reported."
+    }
+  },
+  "updated": {
+    "op_id": "ofc-91a4e6027c3d58b2",
+    "status": "updated",
+    "note": {
+      "note_id": "CLM-1042",
+      "revision": 2,
+      "text": "Rear bumper damage confirmed by the field adjuster."
+    }
+  },
+  "conflito_revision_mismatch": {
+    "op_id": "adj-5d20b7e1c48a9f36",
+    "status": "conflito",
+    "reason": "revision_mismatch",
+    "note_id": "CLM-1042",
+    "server": {
+      "note_id": "CLM-1042",
+      "revision": 2,
+      "text": "Rear bumper damage confirmed by the field adjuster."
+    },
+    "proposal": {
+      "base_revision": 1,
+      "text": "Rear bumper and tail light damage reported."
+    }
+  },
+  "conflito_note_not_found": {
+    "op_id": "adj-0b8e4c7a2f163d95",
+    "status": "conflito",
+    "reason": "note_not_found",
+    "note_id": "CLM-1042",
+    "server": null,
+    "proposal": {
+      "base_revision": 3,
+      "text": "Repair estimate approved."
+    }
+  },
+  "id_reutilizado": {
+    "op_id": "adj-3f9c1d7a5b2e4c60",
+    "status": "id_reutilizado"
+  },
+  "invalid_with_op_id": {
+    "op_id": "adj-c7f1a2e9560b3d84",
+    "status": "invalid",
+    "reason": "base_revision: Too small: expected number to be >=0"
+  },
+  "invalid_without_op_id": {
+    "status": "invalid",
+    "reason": "Invalid input: expected object, received string"
+  }
+}
