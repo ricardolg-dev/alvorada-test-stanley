@@ -14,6 +14,12 @@ The demonstration uses a fictional insurer's claim notes. The decisions behind t
 
 Time spent: about 5 to 5.5 hours, including planning, review and directing the coding agents.
 
+## Delivery
+
+- Evaluated commit: [`4d77b5b96fddc0ef8a4690ca7bfb98bf31afdc87`](https://github.com/stanleytakamatsu/alvorada-test/tree/4d77b5b96fddc0ef8a4690ca7bfb98bf31afdc87), on `main`.
+- [Video walkthrough](https://drive.google.com/file/d/1ZQ0QOoub2pWTNJVXOcvV7vc5ZGfDFO8-/view?usp=drive_link), in English.
+- [Slides from the video](https://claude.ai/artifact/1SdUyRyCFNXE8ttL5P5pMJ): the 24 prints, in the order they appear. Click the page, then use the arrow keys to move between them. Parts of each print link to their source on GitHub.
+
 ## Install, run and test
 
 Requirements: Node.js 24 (see `.nvmrc`) and pnpm 12.15.0, the version pinned in `packageManager`.
